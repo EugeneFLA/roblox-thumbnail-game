@@ -96,39 +96,49 @@ local function normalizeRound(rawRound, sessionId)
 
 	local roundType = rawRound.type or rawRound.roundType or "guess"
 
+	-- API возвращает options напрямую (с imageUrl и thumbnailId)
+	local rawOptions = rawRound.options or rawRound.thumbnails or {}
+
 	if roundType == "guess" then
-		-- Режим "Угадай игру": 4 тамбнейла + описание
 		local options = {}
-		if rawRound.thumbnails then
-			for i, t in ipairs(rawRound.thumbnails) do
-				options[i] = {
-					id       = t.id,
-					imageUrl = t.url or t.imageUrl,
-					isIcon   = t.isIcon or false,
-				}
+		for i, t in ipairs(rawOptions) do
+			local imgUrl = ""
+			if t.universeId then
+				imgUrl = "rbxthumb://type=GameThumbnail&id=" .. tostring(t.universeId) .. "&w=768&h=432"
+			else
+				imgUrl = t.imageUrl or t.url or ""
+			end
+			options[i] = {
+				id       = t.thumbnailId or t.id,
+				imageUrl = imgUrl,
+				isIcon   = t.isIcon or false,
+			}
+		end
+		-- correctId: из correctThumbnailId или из isCorrect флага
+		local correctId = rawRound.correctThumbId or rawRound.correctThumbnailId
+		if not correctId then
+			for _, t in ipairs(rawOptions) do
+				if t.isCorrect then correctId = t.thumbnailId or t.id; break end
 			end
 		end
 		return {
 			type        = "guess",
 			description = rawRound.description or "",
 			gameName    = rawRound.gameName or "",
-			correctId   = rawRound.correctThumbId or rawRound.correctThumbnailId,
+			correctId   = correctId,
 			options     = options,
 			sessionId   = sessionId,
 		}
 
 	elseif roundType == "campaign_pick" or roundType == "pick_best" then
-		-- Режим "Выбери лучший": 2 тамбнейла кампании
 		local options = {}
-		if rawRound.thumbnails then
-			for i, t in ipairs(rawRound.thumbnails) do
-				options[i] = {
-					id           = t.id,
-					imageUrl     = t.url or t.imageUrl,
-					campaignThumbId = t.campaignThumbId,
-					label        = t.label,
-				}
-			end
+		for i, t in ipairs(rawOptions) do
+			options[i] = {
+				id              = t.thumbnailId or t.id,
+				imageUrl        = t.imageUrl or t.url,
+				campaignThumbId = t.campaignThumbId,
+				label           = t.label,
+			}
 		end
 		return {
 			type        = "pick_best",

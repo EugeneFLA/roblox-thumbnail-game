@@ -39,11 +39,11 @@ class Game {
   static async getGuessRound() {
     // Берём 4 случайных игры с тамбнейлами (не иконками)
     const result = await pool.query(
-      `SELECT g.id, g.name, g.description, g.creator_name, g.playing,
-              (SELECT t.id FROM thumbnails t 
+      `SELECT g.id, g.universe_id, g.name, g.description, g.creator_name, g.playing,
+              (SELECT t.id FROM thumbnails t
                WHERE t.game_id = g.id AND t.is_icon = false AND t.image_url IS NOT NULL
                ORDER BY RANDOM() LIMIT 1) as thumb_id,
-              (SELECT t.image_url FROM thumbnails t 
+              (SELECT t.image_url FROM thumbnails t
                WHERE t.game_id = g.id AND t.is_icon = false AND t.image_url IS NOT NULL
                ORDER BY RANDOM() LIMIT 1) as thumb_url
        FROM games g
@@ -85,6 +85,7 @@ class Game {
       options: games.map((g, i) => ({
         thumbnailId: g.thumb_id,
         imageUrl: g.thumb_url,
+        universeId: g.universe_id,
         gameId: g.id,
         isCorrect: i === correctIndex,
       })),
