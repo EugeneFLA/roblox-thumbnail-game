@@ -264,6 +264,7 @@ while true; do
   read -rsp "  postgres password: " DB_PASSWORD; echo
 
   if [ "$DB_PASSWORD" = "peer" ]; then
+    # Без -h чтобы использовать Unix socket
     TEST=$(sudo -u postgres psql -tAc "SELECT 1;" 2>/dev/null || true)
     if [ "$TEST" = "1" ]; then
       ok "Peer auth успешна."; USE_PEER_AUTH=1; break
@@ -339,7 +340,8 @@ step "Создание базы данных \"$DB_NAME\"..."
 
 pg_q() {
   if [ "$USE_PEER_AUTH" -eq 1 ]; then
-    sudo -u postgres psql -h "$DB_HOST" -p "$DB_PORT" "$@"
+    # Peer auth работает только через Unix socket — без -h и -p
+    sudo -u postgres psql "$@"
   else
     PGPASSWORD="$DB_PASSWORD" psql -U "$DB_USER" -h "$DB_HOST" -p "$DB_PORT" "$@"
   fi
