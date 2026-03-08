@@ -299,8 +299,14 @@ else
                python3 -c "import secrets; print(secrets.token_hex(64))" 2>/dev/null || \
                cat /proc/sys/kernel/random/uuid /proc/sys/kernel/random/uuid | tr -d '-\n')
 
+  # При peer auth Node.js должен подключаться через Unix socket
+  local_db_host="$DB_HOST"
+  if [ "${USE_PEER_AUTH:-0}" = "1" ]; then
+    local_db_host="/var/run/postgresql"
+  fi
+
   cat > "$ENV_FILE" << EOF
-DB_HOST=$DB_HOST
+DB_HOST=$local_db_host
 DB_PORT=$DB_PORT
 DB_NAME=$DB_NAME
 DB_USER=$DB_USER

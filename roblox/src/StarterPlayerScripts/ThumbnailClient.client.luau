@@ -187,9 +187,8 @@ local function showRound(round)
 
 	-- Создаём сетку
 	local layout = Instance.new("UIGridLayout")
-	layout.CellSize          = UDim2.new(0.48, 0, 0.48, 0)
-	layout.CellPaddingVertical  = UDim.new(0.02, 0)
-	layout.CellPaddingHorizontal = UDim.new(0.02, 0)
+	layout.CellSize    = UDim2.new(0.48, 0, 0.48, 0)
+	layout.CellPadding = UDim2.new(0.02, 0, 0.02, 0)
 	layout.SortOrder          = Enum.SortOrder.LayoutOrder
 	layout.Parent             = OptionsFrame
 

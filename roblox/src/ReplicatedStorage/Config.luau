@@ -5,7 +5,7 @@
 local Config = {
 	-- URL бэкенда. В продакшене замените на публичный адрес сервера.
 	-- Например: "https://your-server.com/api"
-	BACKEND_URL = "https://your-server.com/api",
+	BACKEND_URL = "http://144.31.183.59:3000/api",
 
 	-- Количество раундов в одной сессии
 	ROUNDS_PER_SESSION = 10,

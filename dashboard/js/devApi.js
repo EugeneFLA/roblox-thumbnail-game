@@ -48,6 +48,11 @@ const DevAPI = (() => {
     setToken,
     clearToken,
 
+    // Публичный доступ к request для вызова произвольных эндпоинтов
+    async request(method, path, body) {
+      return request(path, { method, body: body ? JSON.stringify(body) : undefined });
+    },
+
     // ===== AUTH =====
     async register(data) {
       const result = await request('/auth/register', {

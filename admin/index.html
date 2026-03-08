@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel — Thumbnail Master</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f1117; --bg-card: #1a1d27; --bg-input: #12141e;
+      --border: #2a2d3e; --accent: #7c6af7; --accent-red: #e05050;
+      --accent-green: #4caf80; --accent-gold: #f0b840;
+      --text: #e0e0f0; --text-muted: #6b7280; --radius: 10px;
+    }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; font-size: 14px; min-height: 100vh; }
+
+    /* ── Auth screen ── */
+    #auth-screen {
+      display: flex; align-items: center; justify-content: center; min-height: 100vh;
+    }
+    .auth-box {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 40px; width: 340px; text-align: center;
+    }
+    .auth-box h1 { font-size: 1.4rem; margin-bottom: 6px; }
+    .auth-box p { color: var(--text-muted); margin-bottom: 24px; }
+    .auth-box input {
+      width: 100%; padding: 10px 14px; background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-size: 1rem; margin-bottom: 12px;
+    }
+    .auth-error { color: var(--accent-red); font-size: .85rem; margin-top: 6px; }
+
+    /* ── Layout ── */
+    #app { display: none; }
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 220px; background: var(--bg-card); border-right: 1px solid var(--border);
+      padding: 20px 0; flex-shrink: 0; display: flex; flex-direction: column;
+    }
+    .sidebar-logo { padding: 0 20px 20px; font-size: 1.1rem; font-weight: 700; color: var(--accent); border-bottom: 1px solid var(--border); }
+    .sidebar-logo span { font-size: .75rem; color: var(--text-muted); display: block; font-weight: 400; }
+    .sidebar-nav { padding: 12px 0; flex: 1; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 20px;
+      cursor: pointer; color: var(--text-muted); transition: all .15s; font-size: .9rem;
+    }
+    .nav-item:hover, .nav-item.active { background: rgba(124,106,247,.1); color: var(--text); }
+    .nav-item.active { border-left: 3px solid var(--accent); }
+    .sidebar-footer { padding: 12px 20px; border-top: 1px solid var(--border); }
+    .main { flex: 1; padding: 28px; overflow-y: auto; }
+
+    /* ── Page header ── */
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .page-title { font-size: 1.4rem; font-weight: 700; }
+
+    /* ── Stats cards ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 14px; margin-bottom: 28px; }
+    .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+    .stat-card-label { font-size: .75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+    .stat-card-value { font-size: 1.8rem; font-weight: 700; color: var(--accent); margin-top: 4px; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
+      border-radius: 8px; border: none; cursor: pointer; font-size: .88rem; font-weight: 600;
+      transition: opacity .15s; text-decoration: none;
+    }
+    .btn:hover { opacity: .85; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-danger { background: var(--accent-red); color: #fff; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-green { background: var(--accent-green); color: #fff; }
+    .btn-sm { padding: 5px 10px; font-size: .8rem; }
+    .btn:disabled { opacity: .4; cursor: default; }
+
+    /* ── Search bar ── */
+    .search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+    .search-bar input {
+      flex: 1; padding: 9px 14px; background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-size: .9rem;
+    }
+
+    /* ── Table ── */
+    .table-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 10px 14px; font-size: .75rem; color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+    td { padding: 10px 14px; font-size: .88rem; border-bottom: 1px solid rgba(255,255,255,.03); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,.02); }
+    .td-name { font-weight: 600; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .td-creator { color: var(--text-muted); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .td-actions { display: flex; gap: 6px; }
+
+    /* ── Pagination ── */
+    .pagination { display: flex; gap: 6px; margin-top: 16px; align-items: center; }
+    .pagination button { padding: 6px 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; color: var(--text); cursor: pointer; }
+    .pagination button.active { background: var(--accent); border-color: var(--accent); }
+    .pagination button:disabled { opacity: .4; cursor: default; }
+    .page-info { color: var(--text-muted); font-size: .85rem; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75);
+      z-index: 100; align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 28px; width: 540px; max-width: 95vw;
+    }
+    .modal h2 { margin-bottom: 18px; font-size: 1.1rem; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: .82rem; color: var(--text-muted); margin-bottom: 5px; }
+    .form-group input, .form-group textarea {
+      width: 100%; padding: 9px 12px; background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-size: .9rem;
+    }
+    .form-group textarea { resize: vertical; min-height: 90px; font-family: inherit; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+    /* ── Seed status ── */
+    .seed-status { display: inline-flex; align-items: center; gap: 8px; font-size: .85rem; color: var(--text-muted); }
+    .seed-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-green); }
+    .seed-dot.running { background: var(--accent-gold); animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    .text-muted { color: var(--text-muted); }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: .75rem; font-weight: 600; }
+    .badge-blue { background: rgba(124,106,247,.2); color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<!-- Auth -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <h1>🔐 Admin Panel</h1>
+    <p>Thumbnail Master</p>
+    <input type="password" id="admin-password" placeholder="Пароль администратора" />
+    <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Войти</button>
+    <div class="auth-error" id="auth-error"></div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-logo">Admin Panel <span>Thumbnail Master</span></div>
+      <nav class="sidebar-nav">
+        <div class="nav-item active" data-page="overview">📊 Обзор</div>
+        <div class="nav-item" data-page="games">🎮 Игры</div>
+        <div class="nav-item" data-page="seed">🔄 Обновление БД</div>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn btn-outline" style="width:100%;font-size:.8rem" onclick="logout()">Выйти</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <!-- Overview -->
+      <div id="page-overview">
+        <div class="page-header">
+          <div class="page-title">Обзор системы</div>
+          <button class="btn btn-outline" onclick="loadOverview()">↻ Обновить</button>
+        </div>
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat-card"><div class="stat-card-label">Игры</div><div class="stat-card-value" id="s-games">—</div></div>
+          <div class="stat-card"><div class="stat-card-label">Тамбнейлы</div><div class="stat-card-value" id="s-thumbs">—</div></div>
+          <div class="stat-card"><div class="stat-card-label">Сессии</div><div class="stat-card-value" id="s-sessions">—</div></div>
+          <div class="stat-card"><div class="stat-card-label">Голоса</div><div class="stat-card-value" id="s-votes">—</div></div>
+          <div class="stat-card"><div class="stat-card-label">Разработчики</div><div class="stat-card-value" id="s-devs">—</div></div>
+          <div class="stat-card"><div class="stat-card-label">Кампании</div><div class="stat-card-value" id="s-campaigns">—</div></div>
+        </div>
+      </div>
+
+      <!-- Games -->
+      <div id="page-games" style="display:none">
+        <div class="page-header">
+          <div class="page-title">Roblox Игры</div>
+          <button class="btn btn-primary" onclick="openAddGame()">+ Добавить по Universe ID</button>
+        </div>
+        <div class="search-bar">
+          <input type="text" id="games-search" placeholder="Поиск по названию или автору..." oninput="searchGames()">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Название</th>
+                <th>Автор</th>
+                <th>Universe ID</th>
+                <th>Тамбнейлов</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody id="games-tbody">
+              <tr><td colspan="6" class="text-muted" style="text-align:center;padding:20px">Загрузка...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination" id="games-pagination"></div>
+      </div>
+
+      <!-- Seed -->
+      <div id="page-seed" style="display:none">
+        <div class="page-header">
+          <div class="page-title">Обновление базы данных</div>
+        </div>
+        <div class="table-wrap" style="padding:24px">
+          <p style="margin-bottom:16px;color:var(--text-muted)">
+            Загружает популярные игры из Roblox API (Top Trending, Up-and-Coming, CCU, и др.)
+            и сохраняет/обновляет их в базе данных. Процесс занимает 1–2 минуты.
+          </p>
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+            <button class="btn btn-green" id="seed-btn" onclick="runSeed()">▶ Запустить обновление</button>
+            <div class="seed-status">
+              <div class="seed-dot" id="seed-dot"></div>
+              <span id="seed-status-text">Готово</span>
+            </div>
+          </div>
+          <div id="seed-log" style="margin-top:20px;display:none">
+            <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:6px">Лог последнего запуска:</div>
+            <pre id="seed-log-text" style="background:var(--bg-input);padding:14px;border-radius:8px;font-size:.8rem;overflow:auto;max-height:300px"></pre>
+          </div>
+          <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
+            <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:8px">Расписание автообновления</div>
+            <div style="font-size:.9rem">Каждую ночь в <strong>3:00</strong> сервер автоматически обновляет базу игр.</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Edit Game Modal -->
+<div class="modal-overlay" id="modal-edit">
+  <div class="modal">
+    <h2>Редактировать игру</h2>
+    <input type="hidden" id="edit-game-id">
+    <div class="form-group">
+      <label>Название</label>
+      <input type="text" id="edit-name">
+    </div>
+    <div class="form-group">
+      <label>Автор</label>
+      <input type="text" id="edit-creator">
+    </div>
+    <div class="form-group">
+      <label>Описание</label>
+      <textarea id="edit-desc"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-edit')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveGame()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Game Modal -->
+<div class="modal-overlay" id="modal-add">
+  <div class="modal">
+    <h2>Добавить игру по Universe ID</h2>
+    <div class="form-group">
+      <label>Roblox Universe ID</label>
+      <input type="number" id="add-universe-id" placeholder="например: 920587237">
+    </div>
+    <div id="add-error" style="color:var(--accent-red);font-size:.85rem;margin-top:4px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-add')">Отмена</button>
+      <button class="btn btn-primary" id="add-btn" onclick="addGame()">Добавить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = '/api/admin';
+  let adminPassword = '';
+  let gamesPage = 1;
+  let gamesSearch = '';
+  let searchTimer = null;
+  let seedStatusTimer = null;
+
+  function headers() {
+    return { 'Content-Type': 'application/json', 'x-admin-password': adminPassword };
+  }
+
+  async function doLogin() {
+    const pwd = document.getElementById('admin-password').value;
+    const res = await fetch(`${API}/login`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ password: pwd }) });
+    if (res.ok) {
+      adminPassword = pwd;
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      loadOverview();
+    } else {
+      document.getElementById('auth-error').textContent = 'Неверный пароль';
+    }
+  }
+
+  document.getElementById('admin-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+  function logout() {
+    adminPassword = '';
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  }
+
+  // Navigation
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      document.querySelectorAll('[id^="page-"]').forEach(p => p.style.display = 'none');
+      const page = item.dataset.page;
+      document.getElementById(`page-${page}`).style.display = 'block';
+      if (page === 'overview') loadOverview();
+      if (page === 'games') loadGames();
+      if (page === 'seed') checkSeedStatus();
+    });
+  });
+
+  // Overview
+  async function loadOverview() {
+    const res = await fetch(`${API}/stats`, { headers: headers() });
+    if (!res.ok) return;
+    const d = await res.json();
+    document.getElementById('s-games').textContent = fmt(d.games);
+    document.getElementById('s-thumbs').textContent = fmt(d.thumbnails);
+    document.getElementById('s-sessions').textContent = fmt(d.sessions);
+    document.getElementById('s-votes').textContent = fmt(d.votes);
+    document.getElementById('s-devs').textContent = fmt(d.developers);
+    document.getElementById('s-campaigns').textContent = fmt(d.campaigns);
+  }
+
+  function fmt(n) { return parseInt(n).toLocaleString('ru'); }
+
+  // Games
+  async function loadGames(page) {
+    if (page !== undefined) gamesPage = page;
+    const res = await fetch(`${API}/games?page=${gamesPage}&search=${encodeURIComponent(gamesSearch)}&limit=25`, { headers: headers() });
+    if (!res.ok) return;
+    const d = await res.json();
+    const tbody = document.getElementById('games-tbody');
+    if (!d.games.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-muted" style="text-align:center;padding:20px">Ничего не найдено</td></tr>';
+    } else {
+      tbody.innerHTML = d.games.map(g => `
+        <tr>
+          <td><span class="badge badge-blue">${g.id}</span></td>
+          <td class="td-name" title="${esc(g.name)}">${esc(g.name)}</td>
+          <td class="td-creator">${esc(g.creator_name || '')}</td>
+          <td class="text-muted">${g.universe_id}</td>
+          <td>${g.thumb_count}</td>
+          <td class="td-actions">
+            <button class="btn btn-outline btn-sm" onclick="openEditGame(${g.id},'${esc(g.name)}','${esc(g.creator_name||'')}')">✏ Изменить</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteGame(${g.id})">✕</button>
+          </td>
+        </tr>`).join('');
+    }
+    renderPagination(d.total, d.page, d.limit);
+  }
+
+  function renderPagination(total, page, limit) {
+    const pages = Math.ceil(total / limit);
+    const el = document.getElementById('games-pagination');
+    el.innerHTML = `
+      <button onclick="loadGames(${page-1})" ${page<=1?'disabled':''}>‹</button>
+      <span class="page-info">Стр. ${page} из ${pages} (${fmt(total)} игр)</span>
+      <button onclick="loadGames(${page+1})" ${page>=pages?'disabled':''}>›</button>`;
+  }
+
+  function searchGames() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      gamesSearch = document.getElementById('games-search').value;
+      loadGames(1);
+    }, 400);
+  }
+
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+
+  // Edit game
+  async function openEditGame(id, name, creator) {
+    const res = await fetch(`${API}/games/${id}`, { headers: headers() });
+    const g = await res.json();
+    document.getElementById('edit-game-id').value = id;
+    document.getElementById('edit-name').value = g.name || '';
+    document.getElementById('edit-creator').value = g.creator_name || '';
+    document.getElementById('edit-desc').value = g.description || '';
+    document.getElementById('modal-edit').classList.add('open');
+  }
+
+  async function saveGame() {
+    const id = document.getElementById('edit-game-id').value;
+    await fetch(`${API}/games/${id}`, {
+      method: 'PUT', headers: headers(),
+      body: JSON.stringify({
+        name: document.getElementById('edit-name').value,
+        creator_name: document.getElementById('edit-creator').value,
+        description: document.getElementById('edit-desc').value,
+      })
+    });
+    closeModal('modal-edit');
+    loadGames();
+  }
+
+  async function deleteGame(id) {
+    if (!confirm('Удалить игру и все её тамбнейлы?')) return;
+    await fetch(`${API}/games/${id}`, { method: 'DELETE', headers: headers() });
+    loadGames();
+  }
+
+  // Add game
+  function openAddGame() {
+    document.getElementById('add-universe-id').value = '';
+    document.getElementById('add-error').textContent = '';
+    document.getElementById('modal-add').classList.add('open');
+  }
+
+  async function addGame() {
+    const uid = document.getElementById('add-universe-id').value;
+    if (!uid) return;
+    const btn = document.getElementById('add-btn');
+    btn.disabled = true; btn.textContent = 'Загрузка...';
+    document.getElementById('add-error').textContent = '';
+    const res = await fetch(`${API}/games`, {
+      method: 'POST', headers: headers(),
+      body: JSON.stringify({ universe_id: parseInt(uid) })
+    });
+    btn.disabled = false; btn.textContent = 'Добавить';
+    if (res.ok) {
+      closeModal('modal-add');
+      loadGames(1);
+    } else {
+      const d = await res.json();
+      document.getElementById('add-error').textContent = d.error || 'Ошибка';
+    }
+  }
+
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+  });
+
+  // Seed
+  async function runSeed() {
+    const btn = document.getElementById('seed-btn');
+    btn.disabled = true;
+    const res = await fetch(`${API}/seed`, { method: 'POST', headers: headers() });
+    if (res.ok) {
+      setSeedRunning(true);
+      seedStatusTimer = setInterval(checkSeedStatus, 3000);
+    } else {
+      const d = await res.json();
+      alert(d.error || 'Ошибка');
+      btn.disabled = false;
+    }
+  }
+
+  async function checkSeedStatus() {
+    const res = await fetch(`${API}/seed/status`, { headers: headers() });
+    if (!res.ok) return;
+    const d = await res.json();
+    setSeedRunning(d.running);
+    if (!d.running && seedStatusTimer) {
+      clearInterval(seedStatusTimer);
+      seedStatusTimer = null;
+    }
+  }
+
+  function setSeedRunning(running) {
+    const dot = document.getElementById('seed-dot');
+    const text = document.getElementById('seed-status-text');
+    const btn = document.getElementById('seed-btn');
+    dot.className = 'seed-dot' + (running ? ' running' : '');
+    text.textContent = running ? 'Обновление запущено...' : 'Готово';
+    btn.disabled = running;
+  }
+</script>
+</body>
+</html>

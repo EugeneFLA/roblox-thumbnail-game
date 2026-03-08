@@ -32,7 +32,11 @@
       "Read(//c//**)",
       "Bash(claude mcp add --transport stdio Roblox_Studio \"C:\\\\Users\\\\rst42comp\\\\roblox-studio-mcp\\\\rbx-studio-mcp.exe\" -- --stdio)",
       "mcp__Roblox_Studio__get_studio_mode",
-      "mcp__Roblox_Studio__run_code"
+      "mcp__Roblox_Studio__run_code",
+      "Bash(git push -u origin master)",
+      "Bash(git add install.sh)",
+      "Bash(git commit -m \"Fix REPO_URL and branch in install.sh\")",
+      "Bash(git push)"
     ]
   }
 }

@@ -180,6 +180,18 @@ CREATE INDEX IF NOT EXISTS idx_ct_stats_daily_thumb ON campaign_thumbnail_stats_
 CREATE INDEX IF NOT EXISTS idx_ct_stats_daily_date ON campaign_thumbnail_stats_daily(date);
 CREATE INDEX IF NOT EXISTS idx_c_stats_daily_campaign ON campaign_stats_daily(campaign_id);
 CREATE INDEX IF NOT EXISTS idx_c_stats_daily_date ON campaign_stats_daily(date);
+
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  id          SERIAL PRIMARY KEY,
+  developer_id INTEGER REFERENCES developers(id) ON DELETE CASCADE,
+  token       VARCHAR(64) NOT NULL UNIQUE,
+  code        VARCHAR(6)  NOT NULL,
+  expires_at  TIMESTAMPTZ NOT NULL,
+  used        BOOLEAN DEFAULT false,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_prt_token ON password_reset_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_prt_developer ON password_reset_tokens(developer_id);
 `;
 
 async function initDb() {

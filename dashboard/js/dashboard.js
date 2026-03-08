@@ -43,9 +43,15 @@
 
   // ========== AUTH ==========
   function setupAuth() {
+    const allAuthForms = () => ['form-login','form-register','form-forgot','form-reset'].forEach(id => $('#'+id).classList.add('hidden'));
+
     // Toggle forms
-    $('#show-register').addEventListener('click', e => { e.preventDefault(); $('#form-login').classList.add('hidden'); $('#form-register').classList.remove('hidden'); });
-    $('#show-login').addEventListener('click', e => { e.preventDefault(); $('#form-register').classList.add('hidden'); $('#form-login').classList.remove('hidden'); });
+    $('#show-register').addEventListener('click', e => { e.preventDefault(); allAuthForms(); $('#form-register').classList.remove('hidden'); });
+    $('#show-login').addEventListener('click', e => { e.preventDefault(); allAuthForms(); $('#form-login').classList.remove('hidden'); });
+    $('#show-forgot').addEventListener('click', e => { e.preventDefault(); allAuthForms(); $('#form-forgot').classList.remove('hidden'); });
+    $('#show-reset-code').addEventListener('click', e => { e.preventDefault(); allAuthForms(); showResetForm(null); });
+    $('#back-to-login-1').addEventListener('click', e => { e.preventDefault(); allAuthForms(); $('#form-login').classList.remove('hidden'); });
+    $('#back-to-login-2').addEventListener('click', e => { e.preventDefault(); allAuthForms(); $('#form-login').classList.remove('hidden'); });
 
     // Login
     $('#form-login').addEventListener('submit', async e => {
@@ -77,12 +83,77 @@
       }
     });
 
+    // Forgot password
+    $('#form-forgot').addEventListener('submit', async e => {
+      e.preventDefault();
+      $('#forgot-error').textContent = '';
+      $('#forgot-success').textContent = '';
+      try {
+        const email = $('#forgot-email').value;
+        await DevAPI.request('POST', '/auth/forgot-password', { email });
+        $('#forgot-success').textContent = 'Письмо отправлено! Проверьте почту.';
+        setTimeout(() => {
+          allAuthForms();
+          showResetForm(null, email);
+        }, 2000);
+      } catch (err) {
+        $('#forgot-error').textContent = err.message;
+      }
+    });
+
+    // Reset password
+    $('#form-reset').addEventListener('submit', async e => {
+      e.preventDefault();
+      $('#reset-error').textContent = '';
+      $('#reset-success').textContent = '';
+      const token = $('#form-reset').dataset.resetToken || null;
+      const code  = $('#reset-code').value;
+      const email = $('#reset-email').value;
+      const newPassword = $('#reset-new-password').value;
+      try {
+        await DevAPI.request('POST', '/auth/reset-password', { token, code: code || undefined, email: email || undefined, newPassword });
+        $('#reset-success').textContent = 'Пароль изменён! Выполняется вход...';
+        setTimeout(() => { allAuthForms(); $('#form-login').classList.remove('hidden'); }, 2000);
+      } catch (err) {
+        $('#reset-error').textContent = err.message;
+      }
+    });
+
+    // Обработка ссылки сброса (?reset=TOKEN)
+    const urlParams = new URLSearchParams(window.location.search);
+    const resetToken = urlParams.get('reset');
+    if (resetToken) {
+      allAuthForms();
+      showResetForm(resetToken);
+      window.history.replaceState({}, '', '/dev');
+    }
+
     // Logout
     $('#btn-logout').addEventListener('click', () => {
       DevAPI.logout();
       currentDeveloper = null;
       showPage('auth');
     });
+  }
+
+  function showResetForm(token, email) {
+    const form = $('#form-reset');
+    form.classList.remove('hidden');
+    form.dataset.resetToken = token || '';
+    $('#reset-error').textContent = '';
+    $('#reset-success').textContent = '';
+    if (token) {
+      // По ссылке — скрываем поля email и код
+      $('#reset-token-hint').style.display = 'block';
+      $('#reset-token-hint').textContent = 'Ссылка для сброса подтверждена. Введите новый пароль.';
+      $('#reset-email-group').style.display = 'none';
+      $('#reset-code-group').style.display = 'none';
+    } else {
+      $('#reset-token-hint').style.display = 'none';
+      $('#reset-email-group').style.display = 'block';
+      $('#reset-code-group').style.display = 'block';
+      if (email) $('#reset-email').value = email;
+    }
   }
 
   // ========== DASHBOARD INIT ==========
@@ -328,7 +399,13 @@
 
     grid.innerHTML = thumbnails.map(t => `
       <div class="thumb-card" data-thumb-id="${t.id}">
-        <img src="${t.file_url}" alt="${t.label || 'Thumbnail'}">
+        <div class="thumb-card-img-wrap">
+          <img src="${t.file_url}" alt="${t.label || 'Thumbnail'}">
+          <div class="thumb-card-img-overlay">
+            <button class="btn-icon" data-expand-thumb="${t.file_url}" data-expand-label="${t.label || 'Thumbnail'}" title="Развернуть">⛶</button>
+            <a class="btn-icon" href="${t.file_url}" download title="Скачать">⬇</a>
+          </div>
+        </div>
         <div class="thumb-card-info">
           <div class="thumb-card-label">${t.label || 'Без метки'}</div>
           <div class="thumb-card-stats">
@@ -346,6 +423,11 @@
         </div>
       </div>
     `).join('');
+
+    // Expand handlers
+    grid.querySelectorAll('button[data-expand-thumb]').forEach(btn => {
+      btn.addEventListener('click', () => openThumbModal(btn.dataset.expandThumb, btn.dataset.expandLabel));
+    });
 
     // Replace handlers
     grid.querySelectorAll('input[data-replace-thumb]').forEach(input => {
@@ -523,6 +605,41 @@
     } else {
       showPage('auth');
     }
+  }
+
+  // ── Модальное окно просмотра тамбнейла ──────────────────────────────
+  function openThumbModal(url, label) {
+    let modal = document.getElementById('thumb-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'thumb-modal';
+      modal.innerHTML = `
+        <div class="thumb-modal-backdrop"></div>
+        <div class="thumb-modal-content">
+          <div class="thumb-modal-header">
+            <span class="thumb-modal-label"></span>
+            <div class="thumb-modal-btns">
+              <a class="btn btn-small btn-outline thumb-modal-download" download>⬇ Скачать</a>
+              <button class="btn btn-small btn-outline thumb-modal-close">✕</button>
+            </div>
+          </div>
+          <img class="thumb-modal-img" src="" alt="">
+        </div>`;
+      document.body.appendChild(modal);
+      modal.querySelector('.thumb-modal-backdrop').addEventListener('click', closeThumbModal);
+      modal.querySelector('.thumb-modal-close').addEventListener('click', closeThumbModal);
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') closeThumbModal(); });
+    }
+    modal.querySelector('.thumb-modal-img').src = url;
+    modal.querySelector('.thumb-modal-label').textContent = label;
+    modal.querySelector('.thumb-modal-download').href = url;
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeThumbModal() {
+    const modal = document.getElementById('thumb-modal');
+    if (modal) { modal.style.display = 'none'; document.body.style.overflow = ''; }
   }
 
   if (document.readyState === 'loading') {

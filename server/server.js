@@ -7,6 +7,7 @@ const gameRoutes = require('./routes/game');
 const authRoutes = require('./routes/auth');
 const campaignRoutes = require('./routes/campaigns');
 const statsRoutes = require('./routes/stats');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,6 +29,9 @@ app.use(express.static(path.join(__dirname, '..', 'client')));
 // Serve developer dashboard (отдельный SPA)
 app.use('/dev', express.static(path.join(__dirname, '..', 'dashboard')));
 
+// Serve admin panel
+app.use('/admin', express.static(path.join(__dirname, '..', 'admin')));
+
 // ========== API Routes ==========
 
 // Game API (для Яндекс Игры)
@@ -38,6 +42,9 @@ app.use('/api/dev/auth', authRoutes);
 app.use('/api/dev/campaigns', campaignRoutes);
 app.use('/api/dev/stats', statsRoutes);
 
+// Admin API
+app.use('/api/admin', adminRoutes);
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -46,6 +53,11 @@ app.get('/health', (req, res) => {
 // SPA fallback для dashboard
 app.get('/dev/*', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'dashboard', 'index.html'));
+});
+
+// SPA fallback для admin
+app.get('/admin/*', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'admin', 'index.html'));
 });
 
 // SPA fallback для game client

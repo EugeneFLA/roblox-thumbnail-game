@@ -21,7 +21,8 @@
     "StarterGui": {
       "$className": "StarterGui",
       "ThumbnailGame": {
-        "$path": "src/StarterGui/ThumbnailGame"
+        "$path": "src/StarterGui/ThumbnailGame",
+        "$ignoreUnknownInstances": true
       }
     },
 
