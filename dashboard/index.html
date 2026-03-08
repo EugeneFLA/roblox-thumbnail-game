@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thumbnail Master - Панель разработчика</title>
+  <link rel="stylesheet" href="/dev/css/dashboard.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- ========== АВТОРИЗАЦИЯ ========== -->
+    <div id="page-auth" class="page active">
+      <div class="auth-container">
+        <div class="auth-header">
+          <h1>Thumbnail <span class="accent">Master</span></h1>
+          <p class="subtitle">Панель разработчика Roblox</p>
+        </div>
+
+        <!-- Форма входа -->
+        <form id="form-login" class="auth-form">
+          <h2>Вход</h2>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="login-email" required placeholder="dev@example.com">
+          </div>
+          <div class="form-group">
+            <label>Пароль</label>
+            <input type="password" id="login-password" required placeholder="Минимум 6 символов">
+          </div>
+          <div class="form-error" id="login-error"></div>
+          <button type="submit" class="btn btn-primary">Войти</button>
+          <p class="auth-switch">Нет аккаунта? <a href="#" id="show-register">Зарегистрироваться</a></p>
+        </form>
+
+        <!-- Форма регистрации -->
+        <form id="form-register" class="auth-form hidden">
+          <h2>Регистрация</h2>
+          <div class="form-group">
+            <label>Имя *</label>
+            <input type="text" id="reg-name" required placeholder="Ваше имя или ник">
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" id="reg-email" required placeholder="dev@example.com">
+          </div>
+          <div class="form-group">
+            <label>Пароль *</label>
+            <input type="password" id="reg-password" required minlength="6" placeholder="Минимум 6 символов">
+          </div>
+          <div class="form-group">
+            <label>Компания / Студия</label>
+            <input type="text" id="reg-company" placeholder="Необязательно">
+          </div>
+          <div class="form-group">
+            <label>Roblox username</label>
+            <input type="text" id="reg-roblox" placeholder="Необязательно">
+          </div>
+          <div class="form-error" id="reg-error"></div>
+          <button type="submit" class="btn btn-primary">Создать аккаунт</button>
+          <p class="auth-switch">Уже есть аккаунт? <a href="#" id="show-login">Войти</a></p>
+        </form>
+      </div>
+    </div>
+
+    <!-- ========== ОСНОВНОЙ LAYOUT ========== -->
+    <div id="page-dashboard" class="page">
+      <!-- Навигация -->
+      <nav class="sidebar">
+        <div class="sidebar-header">
+          <h2>TM <span class="accent">Dev</span></h2>
+        </div>
+        <ul class="nav-list">
+          <li><a href="#" data-section="overview" class="nav-link active">Обзор</a></li>
+          <li><a href="#" data-section="campaigns" class="nav-link">Кампании</a></li>
+          <li><a href="#" data-section="roblox-games" class="nav-link">База Roblox</a></li>
+          <li><a href="#" data-section="new-campaign" class="nav-link">+ Новая кампания</a></li>
+        </ul>
+        <div class="sidebar-footer">
+          <div class="user-info">
+            <span id="sidebar-user-name">Developer</span>
+          </div>
+          <button class="btn btn-small btn-outline" id="btn-logout">Выйти</button>
+        </div>
+      </nav>
+
+      <!-- Контент -->
+      <main class="main-content">
+
+        <!-- ОБЗОР -->
+        <section id="section-overview" class="section active">
+          <h1 class="page-title">Обзор</h1>
+          <div class="stats-grid" id="overview-stats">
+            <div class="stat-card">
+              <div class="stat-card-value" id="ov-campaigns">0</div>
+              <div class="stat-card-label">Кампаний</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-value" id="ov-thumbnails">0</div>
+              <div class="stat-card-label">Тамбнейлов</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-value" id="ov-impressions">0</div>
+              <div class="stat-card-label">Показов</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-value" id="ov-votes">0</div>
+              <div class="stat-card-label">Голосов</div>
+            </div>
+          </div>
+
+          <!-- Топ тамбнейлов -->
+          <div class="card">
+            <h3 class="card-title">Лучшие тамбнейлы по CTR</h3>
+            <div id="top-thumbnails-list" class="top-list">
+              <p class="text-muted">Данные появятся после начала тестирования</p>
+            </div>
+          </div>
+
+          <!-- Тренд за неделю -->
+          <div class="card">
+            <h3 class="card-title">Активность за 7 дней</h3>
+            <div id="weekly-chart" class="chart-container">
+              <p class="text-muted">Данные появятся после начала тестирования</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- СПИСОК КАМПАНИЙ -->
+        <section id="section-campaigns" class="section">
+          <div class="section-header">
+            <h1 class="page-title">Мои кампании</h1>
+            <button class="btn btn-primary" id="btn-new-campaign-top">+ Новая кампания</button>
+          </div>
+          <div id="campaigns-list" class="campaigns-grid">
+            <p class="text-muted">Загрузка...</p>
+          </div>
+        </section>
+
+        <!-- БАЗА ROBLOX -->
+        <section id="section-roblox-games" class="section">
+          <h1 class="page-title">База Roblox</h1>
+
+          <!-- Сводка -->
+          <div class="stats-grid" id="roblox-summary-stats">
+            <div class="stat-card">
+              <div class="stat-card-value" id="rg-games">—</div>
+              <div class="stat-card-label">Игр в базе</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-value" id="rg-thumbnails">—</div>
+              <div class="stat-card-label">Тамбнейлов</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-value" id="rg-impressions">—</div>
+              <div class="stat-card-label">Показов</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-value" id="rg-clicks">—</div>
+              <div class="stat-card-label">Кликов</div>
+            </div>
+          </div>
+
+          <!-- Фильтр/сортировка -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Статистика игр <span id="rg-games-with-stats" class="text-muted"></span></h3>
+              <div class="header-actions">
+                <select id="rg-sort" class="select-small">
+                  <option value="ctr">По CTR</option>
+                  <option value="impressions">По показам</option>
+                </select>
+              </div>
+            </div>
+            <div id="rg-table-container">
+              <p class="text-muted">Загрузка...</p>
+            </div>
+            <div id="rg-pagination" class="pagination" style="display:none">
+              <button class="btn btn-small btn-outline" id="rg-prev">← Пред.</button>
+              <span id="rg-page-info" class="text-muted"></span>
+              <button class="btn btn-small btn-outline" id="rg-next">След. →</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- НОВАЯ КАМПАНИЯ -->
+        <section id="section-new-campaign" class="section">
+          <h1 class="page-title" id="campaign-form-title">Новая кампания</h1>
+          <form id="form-campaign" class="form-card">
+            <input type="hidden" id="campaign-edit-id">
+            <div class="form-group">
+              <label>Название кампании *</label>
+              <input type="text" id="camp-name" required placeholder="Например: Тест обложек v2">
+            </div>
+            <div class="form-group">
+              <label>Название игры *</label>
+              <input type="text" id="camp-game-title" required placeholder="Название вашей Roblox игры">
+            </div>
+            <div class="form-group">
+              <label>Описание игры * <span class="text-muted">(минимум 20 символов)</span></label>
+              <textarea id="camp-game-desc" required rows="4" minlength="20" placeholder="Опишите вашу игру так, как она будет показана игрокам"></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Roblox Universe ID</label>
+                <input type="number" id="camp-universe-id" placeholder="Необязательно">
+              </div>
+              <div class="form-group">
+                <label>Целевое кол-во голосов</label>
+                <input type="number" id="camp-target-votes" value="1000" min="100">
+              </div>
+            </div>
+            <div class="form-error" id="campaign-error"></div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" id="btn-save-campaign">Создать кампанию</button>
+              <button type="button" class="btn btn-outline" id="btn-cancel-campaign">Отмена</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- ДЕТАЛИ КАМПАНИИ -->
+        <section id="section-campaign-detail" class="section">
+          <div class="section-header">
+            <div>
+              <button class="btn btn-small btn-outline" id="btn-back-campaigns">&larr; Назад</button>
+              <h1 class="page-title" id="detail-campaign-name">Кампания</h1>
+              <span class="badge" id="detail-campaign-status">draft</span>
+            </div>
+            <div class="header-actions">
+              <button class="btn btn-small btn-outline" id="btn-edit-campaign">Редактировать</button>
+              <button class="btn btn-small btn-success" id="btn-activate-campaign">Активировать</button>
+              <button class="btn btn-small btn-warning" id="btn-pause-campaign">Пауза</button>
+            </div>
+          </div>
+
+          <!-- Описание игры -->
+          <div class="card">
+            <h3 class="card-title">Описание игры</h3>
+            <p id="detail-game-desc" class="text-secondary"></p>
+          </div>
+
+          <!-- Статистика кампании -->
+          <div class="stats-grid" id="detail-stats">
+            <div class="stat-card">
+              <div class="stat-card-value" id="det-impressions">0</div>
+              <div class="stat-card-label">Показов</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-value" id="det-votes">0</div>
+              <div class="stat-card-label">Голосов</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-value" id="det-players">0</div>
+              <div class="stat-card-label">Игроков</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-value" id="det-progress">0%</div>
+              <div class="stat-card-label">Прогресс</div>
+            </div>
+          </div>
+
+          <!-- Загрузка тамбнейлов -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Тамбнейлы</h3>
+              <label class="btn btn-small btn-primary upload-btn">
+                + Загрузить
+                <input type="file" id="upload-thumbnails" multiple accept="image/*" hidden>
+              </label>
+            </div>
+            <div id="thumbnails-grid" class="thumbnails-grid">
+              <p class="text-muted">Загрузите тамбнейлы для тестирования</p>
+            </div>
+          </div>
+
+          <!-- Сравнение тамбнейлов -->
+          <div class="card" id="comparison-card">
+            <h3 class="card-title">Сравнение тамбнейлов</h3>
+            <div id="comparison-table-container">
+              <table class="data-table" id="comparison-table">
+                <thead>
+                  <tr>
+                    <th>Тамбнейл</th>
+                    <th>Метка</th>
+                    <th>Показы</th>
+                    <th>Голоса</th>
+                    <th>CTR</th>
+                    <th>Побед</th>
+                    <th>Win Rate</th>
+                    <th>Ср. время</th>
+                  </tr>
+                </thead>
+                <tbody id="comparison-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+  </div>
+
+  <script src="/dev/js/devApi.js"></script>
+  <script src="/dev/js/dashboard.js"></script>
+</body>
+</html>

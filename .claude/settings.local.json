@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:rotrends.com)",
+      "WebFetch(domain:www.roblox.com)",
+      "WebFetch(domain:games.roblox.com)",
+      "WebFetch(domain:thumbnails.roblox.com)",
+      "Bash(curl -s \"https://games.roblox.com/v1/games/list?sortToken=&startRows=0&maxRows=20\")",
+      "Bash(curl -s \"https://thumbnails.roblox.com/v1/games/multiget/thumbnails?universeIds=4872321990&countPerUniverse=10&size=768x432&format=Png&isCircular=false\")",
+      "Bash(curl -s \"https://games.roblox.com/v1/games/list?sortToken=1&startRows=0&maxRows=5\")",
+      "Bash(curl -s \"https://rotrends.com/api/top-games?page=1\")",
+      "Bash(python -c \" import sys, json d = json.load\\(sys.stdin\\) for sort in d.get\\(''sorts'', []\\): print\\(sort.get\\(''id''\\), ''|'', sort.get\\(''sortDisplayName''\\), ''|'', sort.get\\(''gameSetTypeId''\\), ''|'', sort.get\\(''gameSetTargetId''\\)\\) \")",
+      "Bash(npm install node-cron --save)",
+      "Bash(node scripts/seedRoblox.js)",
+      "Bash(curl -s \"https://apis.roblox.com/explore-api/v1/get-games?gameSetTypeId=23&gameSetTargetId=238&startRows=0&maxRows=10&sessionId=seed\")",
+      "Bash(node -e \":*)",
+      "Bash(curl -s http://localhost:3000/health)",
+      "Bash(node -e \"const pool = require\\(''./config/database''\\); pool.query\\(\"\"SELECT column_name, data_type FROM information_schema.columns WHERE table_name IN \\(''votes'',''thumbnail_impressions''\\) ORDER BY table_name, ordinal_position\"\"\\).then\\(r => { console.log\\(JSON.stringify\\(r.rows, null, 2\\)\\); pool.end\\(\\); }\\).catch\\(e => { console.error\\(e.message\\); pool.end\\(\\); }\\);\")",
+      "Bash(node -e \"require\\(''./routes/stats''\\)\")",
+      "Bash(rojo --version)",
+      "Bash(wally --version)",
+      "Bash(rojo fmt default.project.json)",
+      "Bash(rojo build default.project.json --output /tmp/test_build.rbxl)",
+      "Bash(rojo build default.project.json --output /tmp/test_build.rbxlx)",
+      "Bash(where aftman)",
+      "Bash(where rokit)",
+      "Bash(aftman add rojo-rbx/rojo@7.4.4)",
+      "WebSearch",
+      "Bash(claude mcp list)",
+      "Read(//c/Users/rst42comp/**)",
+      "Read(//c/Program Files/**)",
+      "Read(//c//**)",
+      "Bash(claude mcp add --transport stdio Roblox_Studio \"C:\\\\Users\\\\rst42comp\\\\roblox-studio-mcp\\\\rbx-studio-mcp.exe\" -- --stdio)",
+      "mcp__Roblox_Studio__get_studio_mode",
+      "mcp__Roblox_Studio__run_code"
+    ]
+  }
+}

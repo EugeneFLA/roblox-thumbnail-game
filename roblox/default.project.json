@@ -1,0 +1,38 @@
+{
+  "name": "ThumbnailMaster",
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "ThumbnailMaster": {
+        "$path": "src/ReplicatedStorage"
+      }
+    },
+
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "$properties": { "LoadStringEnabled": false },
+      "ThumbnailMaster": {
+        "$path": "src/ServerScriptService"
+      }
+    },
+
+    "StarterGui": {
+      "$className": "StarterGui",
+      "ThumbnailGame": {
+        "$path": "src/StarterGui/ThumbnailGame"
+      }
+    },
+
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "ThumbnailMaster": {
+          "$path": "src/StarterPlayerScripts"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Thumbnail Master - Угадай игру Roblox!</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Yandex Games SDK -->
+  <script src="/sdk.js"></script>
+</head>
+<body>
+  <div id="app">
+
+    <!-- ========== ЭКРАН ЗАГРУЗКИ ========== -->
+    <div id="screen-loading" class="screen active">
+      <div class="loading-content">
+        <div class="logo-container">
+          <h1 class="logo-text">THUMBNAIL</h1>
+          <h1 class="logo-text logo-accent">MASTER</h1>
+        </div>
+        <div class="loading-bar-container">
+          <div class="loading-bar" id="loading-bar"></div>
+        </div>
+        <p class="loading-text" id="loading-text">Загрузка...</p>
+      </div>
+    </div>
+
+    <!-- ========== ГЛАВНОЕ МЕНЮ ========== -->
+    <div id="screen-menu" class="screen">
+      <div class="menu-content">
+        <div class="logo-container">
+          <h1 class="logo-text">THUMBNAIL</h1>
+          <h1 class="logo-text logo-accent">MASTER</h1>
+          <p class="logo-subtitle">Угадай Roblox игру по картинке!</p>
+        </div>
+
+        <div class="player-stats" id="menu-stats">
+          <div class="stat-item">
+            <span class="stat-icon">&#x1F3C6;</span>
+            <span class="stat-value" id="menu-score">0</span>
+            <span class="stat-label">Очки</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-icon">&#x1FA99;</span>
+            <span class="stat-value" id="menu-coins">0</span>
+            <span class="stat-label">Монеты</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-icon">&#x2B50;</span>
+            <span class="stat-value" id="menu-level">1</span>
+            <span class="stat-label">Уровень</span>
+          </div>
+        </div>
+
+        <div class="menu-buttons">
+          <button class="btn btn-primary btn-large" id="btn-play">
+            ИГРАТЬ
+          </button>
+          <button class="btn btn-secondary" id="btn-shop">
+            &#x1F6D2; Магазин
+          </button>
+          <button class="btn btn-secondary" id="btn-leaderboard">
+            Таблица лидеров
+          </button>
+          <button class="btn btn-secondary" id="btn-how-to-play">
+            Как играть?
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== ЭКРАН ИГРЫ (УГАДАЙ) ========== -->
+    <div id="screen-game" class="screen">
+      <!-- Верхняя панель -->
+      <div class="game-hud">
+        <div class="hud-left">
+          <span class="hud-label">Раунд</span>
+          <span class="hud-value" id="hud-round">1</span>
+        </div>
+        <div class="hud-center">
+          <div class="streak-container" id="streak-container">
+            <span class="streak-fire">&#x1F525;</span>
+            <span class="streak-count" id="hud-streak">0</span>
+          </div>
+        </div>
+        <div class="hud-right">
+          <span class="hud-label">Монеты</span>
+          <span class="hud-value" id="hud-coins">0</span>
+        </div>
+      </div>
+
+      <!-- Таймер -->
+      <div class="timer-bar-container">
+        <div class="timer-bar" id="timer-bar"></div>
+      </div>
+
+      <!-- Кнопки улучшений (заполняется динамически) -->
+      <div id="hud-powerups"></div>
+
+      <!-- Описание игры -->
+      <div class="description-card" id="description-card">
+        <p class="description-label">Какая игра подходит к описанию?</p>
+        <p class="description-text" id="description-text"></p>
+      </div>
+
+      <!-- 4 варианта тамбнейлов -->
+      <div class="options-grid" id="options-grid">
+        <!-- Заполняется динамически -->
+      </div>
+
+      <!-- Результат раунда (оверлей) -->
+      <div class="round-result" id="round-result">
+        <div class="result-icon" id="result-icon"></div>
+        <p class="result-text" id="result-text"></p>
+        <p class="result-coins" id="result-coins"></p>
+        <p class="result-game-name" id="result-game-name"></p>
+        <button class="btn btn-secondary btn-shop-round" id="btn-shop-round">Магазин</button>
+      </div>
+    </div>
+
+    <!-- ========== ЭКРАН РЕЗУЛЬТАТОВ ========== -->
+    <div id="screen-results" class="screen">
+      <div class="results-content">
+        <h2 class="results-title">Результаты</h2>
+
+        <div class="results-summary">
+          <div class="result-big-stat">
+            <span class="big-stat-value" id="results-correct">0</span>
+            <span class="big-stat-label">из <span id="results-total">0</span> правильно</span>
+          </div>
+
+          <div class="results-stats-row">
+            <div class="stat-item">
+              <span class="stat-value" id="results-coins-earned">0</span>
+              <span class="stat-label">Монет заработано</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value" id="results-max-streak">0</span>
+              <span class="stat-label">Лучший streak</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value" id="results-level">1</span>
+              <span class="stat-label">Уровень</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="results-buttons">
+          <button class="btn btn-primary btn-large" id="btn-play-again">
+            Играть ещё!
+          </button>
+          <button class="btn btn-reward" id="btn-watch-ad">
+            Удвоить монеты (Реклама)
+          </button>
+          <button class="btn btn-secondary" id="btn-shop-results">
+            Магазин
+          </button>
+          <button class="btn btn-secondary" id="btn-back-menu">
+            В меню
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== ЭКРАН ЛИДЕРБОРДА ========== -->
+    <div id="screen-leaderboard" class="screen">
+      <div class="leaderboard-content">
+        <h2 class="screen-title">Таблица лидеров</h2>
+        <div class="leaderboard-list" id="leaderboard-list">
+          <!-- Заполняется динамически -->
+        </div>
+        <button class="btn btn-secondary" id="btn-lb-back">Назад</button>
+      </div>
+    </div>
+
+    <!-- ========== МАГАЗИН ========== -->
+    <div id="screen-shop" class="screen">
+      <div class="shop-content">
+        <h2 class="screen-title">Магазин</h2>
+        <div class="shop-coins-display" id="shop-coins-display">&#x1FA99; 0 монет</div>
+        <div class="shop-grid" id="shop-grid">
+          <!-- Заполняется динамически -->
+        </div>
+        <button class="btn btn-secondary" id="btn-shop-back">Назад</button>
+      </div>
+    </div>
+
+    <!-- ========== КАК ИГРАТЬ ========== -->
+    <div id="screen-howto" class="screen">
+      <div class="howto-content">
+        <h2 class="screen-title">Как играть?</h2>
+        <div class="howto-steps">
+          <div class="howto-step">
+            <div class="step-number">1</div>
+            <p>Прочитай описание Roblox-игры</p>
+          </div>
+          <div class="howto-step">
+            <div class="step-number">2</div>
+            <p>Выбери правильную картинку (тамбнейл) из 4 вариантов</p>
+          </div>
+          <div class="howto-step">
+            <div class="step-number">3</div>
+            <p>Чем быстрее ответишь — тем больше монет получишь!</p>
+          </div>
+          <div class="howto-step">
+            <div class="step-number">4</div>
+            <p>Собирай streak — серию правильных ответов для бонусных монет</p>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="btn-howto-back">Понятно!</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
