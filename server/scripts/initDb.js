@@ -192,6 +192,9 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
 );
 CREATE INDEX IF NOT EXISTS idx_prt_token ON password_reset_tokens(token);
 CREATE INDEX IF NOT EXISTS idx_prt_developer ON password_reset_tokens(developer_id);
+
+-- Ключи сторонних API (добавляем если столбца ещё нет)
+ALTER TABLE developers ADD COLUMN IF NOT EXISTS meshy_api_key TEXT;
 `;
 
 async function initDb() {

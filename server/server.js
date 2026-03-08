@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth');
 const campaignRoutes = require('./routes/campaigns');
 const statsRoutes = require('./routes/stats');
 const adminRoutes = require('./routes/admin');
+const aiRoutes = require('./routes/ai');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -44,6 +45,9 @@ app.use('/api/dev/stats', statsRoutes);
 
 // Admin API
 app.use('/api/admin', adminRoutes);
+
+// AI generation (Meshy proxy)
+app.use('/api/dev/ai', aiRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

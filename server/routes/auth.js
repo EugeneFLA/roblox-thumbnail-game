@@ -233,4 +233,42 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/dev/auth/settings — получить настройки (ключ показывается замаскированным)
+ */
+router.get('/settings', requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT meshy_api_key FROM developers WHERE id = $1',
+      [req.developer.id]
+    );
+    const row = result.rows[0] || {};
+    const key = row.meshy_api_key;
+    res.json({
+      hasMeshyKey: !!key,
+      meshyApiKeyMasked: key ? key.slice(0, 6) + '••••••••••••' + key.slice(-4) : null,
+    });
+  } catch (err) {
+    console.error('Settings get error:', err);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
+/**
+ * PUT /api/dev/auth/settings — сохранить настройки
+ */
+router.put('/settings', requireAuth, async (req, res) => {
+  try {
+    const { meshyApiKey } = req.body;
+    await pool.query(
+      'UPDATE developers SET meshy_api_key = $2, updated_at = NOW() WHERE id = $1',
+      [req.developer.id, meshyApiKey || null]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Settings update error:', err);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
 module.exports = router;

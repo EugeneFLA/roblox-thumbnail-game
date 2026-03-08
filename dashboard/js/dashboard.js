@@ -586,11 +586,244 @@
     });
   }
 
+  // ========== AI GENERATION ==========
+  function setupAiGenerate() {
+    const promptEl   = $('#ai-prompt');
+    const promptLen  = $('#ai-prompt-len');
+    const ratioGroup = $('#ai-ratio-group');
+    const countGroup = $('#ai-count-group');
+    const btnGen     = $('#btn-ai-generate');
+    const errEl      = $('#ai-error');
+    const resultsGrid = $('#ai-results-grid');
+    const btnClear   = $('#btn-ai-clear');
+
+    // Счётчик символов
+    promptEl.addEventListener('input', () => {
+      promptLen.textContent = promptEl.value.length;
+    });
+
+    // Кнопки соотношения сторон — убираем дубль из HTML и делаем уникальные
+    // Инициализируем: активный — 16:9
+    let selectedRatio = '16:9';
+    let selectedCount = 2;
+
+    // Перестраиваем ratio кнопки программно (HTML содержит дубль)
+    ratioGroup.innerHTML = ['16:9','1:1','4:3','3:4','9:16'].map(r =>
+      `<button class="ratio-btn${r === selectedRatio ? ' active' : ''}" data-ratio="${r}">${r}</button>`
+    ).join('');
+
+    ratioGroup.addEventListener('click', e => {
+      const btn = e.target.closest('.ratio-btn');
+      if (!btn) return;
+      selectedRatio = btn.dataset.ratio;
+      ratioGroup.querySelectorAll('.ratio-btn').forEach(b => b.classList.toggle('active', b === btn));
+    });
+
+    countGroup.addEventListener('click', e => {
+      const btn = e.target.closest('.count-btn');
+      if (!btn) return;
+      selectedCount = parseInt(btn.dataset.count);
+      countGroup.querySelectorAll('.count-btn').forEach(b => b.classList.toggle('active', b === btn));
+    });
+
+    // Очистить результаты
+    btnClear.addEventListener('click', () => {
+      resultsGrid.innerHTML = `
+        <div class="ai-placeholder">
+          <div class="ai-placeholder-icon">🎨</div>
+          <p>Здесь появятся сгенерированные тамбнейлы</p>
+        </div>`;
+      btnClear.style.display = 'none';
+    });
+
+    // Генерация
+    btnGen.addEventListener('click', async () => {
+      const prompt = promptEl.value.trim();
+      const model  = $('#ai-model').value;
+
+      errEl.textContent = '';
+      if (!prompt) { errEl.textContent = 'Введите описание изображения'; return; }
+
+      btnGen.disabled = true;
+      $('#ai-btn-text').textContent = 'Запрос...';
+
+      // Убираем плейсхолдер
+      const placeholder = resultsGrid.querySelector('.ai-placeholder');
+      if (placeholder) placeholder.remove();
+      btnClear.style.display = 'inline-block';
+
+      try {
+        const data = await DevAPI.request('POST', '/ai/generate', {
+          prompt, model,
+          aspectRatio: selectedRatio,
+          count: selectedCount,
+        });
+
+        // Для каждой задачи создаём карточку с прогрессом и запускаем поллинг
+        for (const taskId of data.taskIds) {
+          const card = createPendingCard(taskId);
+          resultsGrid.prepend(card);
+          pollTask(taskId, card, model);
+        }
+      } catch (err) {
+        if (err.needsKey || err.message.includes('Meshy API ключ')) {
+          errEl.innerHTML = `Meshy API ключ не настроен. <a href="#" class="link-to-settings">Перейти в Настройки →</a>`;
+          errEl.querySelector('.link-to-settings').addEventListener('click', e => {
+            e.preventDefault();
+            showSection('settings');
+          });
+        } else {
+          errEl.textContent = err.message;
+        }
+      } finally {
+        btnGen.disabled = false;
+        $('#ai-btn-text').textContent = 'Генерировать';
+      }
+    });
+
+    function createPendingCard(taskId) {
+      const card = document.createElement('div');
+      card.className = 'ai-pending-card';
+      card.dataset.taskId = taskId;
+      card.innerHTML = `
+        <div class="ai-pending-inner">
+          <div class="ai-spinner"></div>
+          <div class="ai-progress-bar-wrap">
+            <div class="ai-progress-bar" style="width:0%"></div>
+          </div>
+          <div class="ai-progress-text">Генерация... 0%</div>
+        </div>`;
+      return card;
+    }
+
+    async function pollTask(taskId, card, model) {
+      const INTERVAL = 3000;
+      const MAX_POLLS = 120; // 6 минут максимум
+      let polls = 0;
+
+      const poll = async () => {
+        if (polls++ > MAX_POLLS) {
+          card.innerHTML = `<div class="ai-pending-inner"><p class="text-muted">Таймаут генерации</p></div>`;
+          return;
+        }
+
+        try {
+          const data = await DevAPI.request('GET', `/ai/status/${taskId}`);
+          const { status, progress, imageUrls } = data;
+
+          if (status === 'SUCCEEDED' && imageUrls.length > 0) {
+            replaceWithResult(card, imageUrls[0], model);
+          } else if (status === 'FAILED' || status === 'CANCELED') {
+            card.innerHTML = `<div class="ai-pending-inner"><p style="color:var(--accent)">Ошибка генерации</p></div>`;
+          } else {
+            // Обновляем прогресс
+            const bar = card.querySelector('.ai-progress-bar');
+            const txt = card.querySelector('.ai-progress-text');
+            if (bar) bar.style.width = `${progress}%`;
+            if (txt) txt.textContent = `Генерация... ${progress}%`;
+            setTimeout(poll, INTERVAL);
+          }
+        } catch (err) {
+          setTimeout(poll, INTERVAL * 2);
+        }
+      };
+
+      setTimeout(poll, INTERVAL);
+    }
+
+    function replaceWithResult(card, imageUrl, model) {
+      card.className = 'ai-result-card';
+      card.innerHTML = `
+        <div class="ai-result-img-wrap">
+          <img src="${imageUrl}" alt="AI thumbnail" loading="lazy">
+          <div class="ai-result-overlay">
+            <button class="btn btn-small btn-primary btn-expand-ai">Увеличить</button>
+            <a class="btn btn-small btn-outline" href="${imageUrl}" download target="_blank">⬇ Скачать</a>
+          </div>
+        </div>
+        <div class="ai-result-actions">
+          <span class="ai-result-model">${model}</span>
+          <a class="btn btn-small btn-outline" href="${imageUrl}" download target="_blank">⬇</a>
+        </div>`;
+
+      card.querySelector('.btn-expand-ai').addEventListener('click', () => {
+        openThumbModal(imageUrl, model);
+      });
+    }
+  }
+
+  // ========== SETTINGS ==========
+  function setupSettings() {
+    const form       = $('#form-settings');
+    const keyInput   = $('#settings-meshy-key');
+    const btnToggle  = $('#btn-toggle-key');
+    const btnRemove  = $('#btn-remove-key');
+    const errEl      = $('#settings-error');
+    const successEl  = $('#settings-success');
+    const statusEl   = $('#settings-key-status');
+
+    // Показать/скрыть ключ
+    btnToggle.addEventListener('click', () => {
+      keyInput.type = keyInput.type === 'password' ? 'text' : 'password';
+    });
+
+    // Загрузить текущий статус ключа
+    async function loadKeyStatus() {
+      try {
+        const data = await DevAPI.request('GET', '/auth/settings');
+        if (data.hasMeshyKey) {
+          statusEl.innerHTML = `<span class="key-status key-status-ok">✓ API ключ сохранён: <code>${data.meshyApiKeyMasked}</code></span>`;
+          keyInput.placeholder = data.meshyApiKeyMasked;
+        } else {
+          statusEl.innerHTML = `<span class="key-status key-status-none">API ключ не настроен</span>`;
+        }
+      } catch (e) { /* ignore */ }
+    }
+
+    // Вызываем при переходе в настройки
+    document.querySelector('.nav-link[data-section="settings"]')
+      .addEventListener('click', loadKeyStatus);
+
+    // Сохранить
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      errEl.textContent = '';
+      successEl.textContent = '';
+      const key = keyInput.value.trim();
+      if (!key) { errEl.textContent = 'Введите API ключ'; return; }
+      try {
+        await DevAPI.request('PUT', '/auth/settings', { meshyApiKey: key });
+        successEl.textContent = 'Ключ сохранён!';
+        keyInput.value = '';
+        loadKeyStatus();
+        setTimeout(() => successEl.textContent = '', 3000);
+      } catch (err) {
+        errEl.textContent = err.message;
+      }
+    });
+
+    // Удалить
+    btnRemove.addEventListener('click', async () => {
+      if (!confirm('Удалить Meshy API ключ?')) return;
+      try {
+        await DevAPI.request('PUT', '/auth/settings', { meshyApiKey: null });
+        statusEl.innerHTML = `<span class="key-status key-status-none">API ключ не настроен</span>`;
+        keyInput.placeholder = 'msy_••••••••••••••••••••••••••••••••';
+        successEl.textContent = 'Ключ удалён';
+        setTimeout(() => successEl.textContent = '', 3000);
+      } catch (err) {
+        errEl.textContent = err.message;
+      }
+    });
+  }
+
   // ========== INIT ==========
   async function init() {
     setupAuth();
     setupNavigation();
     setupRobloxGames();
+    setupAiGenerate();
+    setupSettings();
 
     // Проверяем токен
     if (DevAPI.getToken()) {

@@ -112,6 +112,8 @@
           <li><a href="#" data-section="overview" class="nav-link active">Обзор</a></li>
           <li><a href="#" data-section="campaigns" class="nav-link">Кампании</a></li>
           <li><a href="#" data-section="roblox-games" class="nav-link">База Roblox</a></li>
+          <li><a href="#" data-section="ai-generate" class="nav-link">AI Генерация</a></li>
+          <li><a href="#" data-section="settings" class="nav-link">Настройки</a></li>
           <li><a href="#" data-section="new-campaign" class="nav-link">+ Новая кампания</a></li>
         </ul>
         <div class="sidebar-footer">
@@ -218,6 +220,112 @@
               <span id="rg-page-info" class="text-muted"></span>
               <button class="btn btn-small btn-outline" id="rg-next">След. →</button>
             </div>
+          </div>
+        </section>
+
+        <!-- AI ГЕНЕРАЦИЯ -->
+        <section id="section-ai-generate" class="section">
+          <h1 class="page-title">AI Генерация тамбнейлов</h1>
+          <p class="text-muted" style="margin-bottom:24px">Используется модель <strong>Nano Banana Pro</strong> от Meshy.ai — оптимизирована для Roblox-стиля.</p>
+
+          <div class="ai-layout">
+            <!-- Левая панель — настройки -->
+            <div class="card ai-settings-card">
+              <h3 class="card-title">Настройки генерации</h3>
+
+              <div class="form-group">
+                <label>Модель ИИ</label>
+                <select id="ai-model" class="form-input">
+                  <option value="nano-banana-pro">Nano Banana Pro</option>
+                  <option value="nano-banana-2">Nano Banana 2 (новинка)</option>
+                  <option value="nano-banana">Nano Banana</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Prompt <span class="text-muted">(описание на любом языке)</span></label>
+                <textarea id="ai-prompt" class="form-input" rows="5"
+                  placeholder="Например: Roblox thumbnail, 3D blocky style, yellow noob avatar holding a sword, bright colors, 'NOOB vs PRO' text, dramatic lighting"></textarea>
+                <div class="ai-prompt-counter"><span id="ai-prompt-len">0</span>/800</div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Соотношение сторон</label>
+                  <div class="ratio-buttons" id="ai-ratio-group">
+                    <button class="ratio-btn" data-ratio="16:9">16:9</button>
+                    <button class="ratio-btn active" data-ratio="16:9">16:9</button>
+                    <button class="ratio-btn" data-ratio="1:1">1:1</button>
+                    <button class="ratio-btn" data-ratio="4:3">4:3</button>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Кол-во изображений</label>
+                  <div class="count-buttons" id="ai-count-group">
+                    <button class="count-btn" data-count="1">1</button>
+                    <button class="count-btn active" data-count="2">2</button>
+                    <button class="count-btn" data-count="3">3</button>
+                    <button class="count-btn" data-count="4">4</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-error" id="ai-error"></div>
+
+              <button class="btn btn-primary btn-generate" id="btn-ai-generate">
+                <span id="ai-btn-text">Генерировать</span>
+              </button>
+
+              <p class="text-muted ai-credits-note">Каждое изображение тратит 1 кредит Meshy.ai</p>
+            </div>
+
+            <!-- Правая панель — результаты -->
+            <div class="ai-results-panel">
+              <div class="ai-results-header">
+                <h3 class="card-title">Результаты</h3>
+                <button class="btn btn-small btn-outline" id="btn-ai-clear" style="display:none">Очистить</button>
+              </div>
+              <div id="ai-results-grid" class="ai-results-grid">
+                <div class="ai-placeholder">
+                  <div class="ai-placeholder-icon">🎨</div>
+                  <p>Здесь появятся сгенерированные тамбнейлы</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- НАСТРОЙКИ -->
+        <section id="section-settings" class="section">
+          <h1 class="page-title">Настройки</h1>
+
+          <div class="card" style="max-width:560px">
+            <h3 class="card-title">Интеграция с Meshy.ai</h3>
+            <p class="text-muted" style="margin-bottom:20px">
+              Введите свой API ключ от <strong>meshy.ai</strong> для использования AI генерации тамбнейлов.
+              Ключ хранится безопасно на сервере и используется только для ваших запросов.<br><br>
+              Получить ключ: <strong>meshy.ai → API → API Keys</strong>
+            </p>
+
+            <div id="settings-key-status" class="settings-key-status"></div>
+
+            <form id="form-settings" class="settings-form">
+              <div class="form-group">
+                <label>Meshy API Key</label>
+                <div class="api-key-input-wrap">
+                  <input type="password" id="settings-meshy-key" class="form-input"
+                    placeholder="msy_••••••••••••••••••••••••••••••••">
+                  <button type="button" class="btn-eye" id="btn-toggle-key" title="Показать/скрыть">👁</button>
+                </div>
+                <p class="text-muted" style="font-size:0.78rem;margin-top:4px">Начинается с <code>msy_</code></p>
+              </div>
+              <div class="form-error" id="settings-error"></div>
+              <div class="form-success" id="settings-success"></div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Сохранить ключ</button>
+                <button type="button" class="btn btn-outline" id="btn-remove-key">Удалить ключ</button>
+              </div>
+            </form>
           </div>
         </section>
 
