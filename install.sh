@@ -11,8 +11,8 @@ set -euo pipefail
 # ============================================================
 #  КОНФИГУРАЦИЯ — замените на ваш репозиторий
 # ============================================================
-REPO_URL="https://github.com/YOUR_USERNAME/roblox-thumbnail-game.git"
-REPO_BRANCH="main"
+REPO_URL="https://github.com/EugeneFLA/roblox-thumbnail-game.git"
+REPO_BRANCH="master"
 INSTALL_DIR="$HOME/roblox-thumbnail-game"
 
 DB_NAME="thumbnail_game"
